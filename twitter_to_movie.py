@@ -3,42 +3,138 @@ import json
 import urllib.request
 import os
 import subprocess
+from google.cloud import videointelligence
+from google.oauth2 import service_account
+from google.protobuf.json_format import MessageToJson
 
-with open("keys.dat") as f:
-	keys = f.read().split()
-api = twitter.Api(consumer_key= keys[0],
-			consumer_secret=keys[1],
-			access_token_key=keys[2],
-			access_token_secret=keys[3])
 
-res = api.GetUserTimeline(screen_name="Omz2007", count=200, trim_user=True, exclude_replies=True)
-images = []
-for tweet in res:
-	js = tweet._json["entities"]
-	if "media" in js.keys():
-		for media in js["media"]:
-			if media["media_url"][-3:] == "jpg":
-				images.append(media["media_url"])
+def get_timeline_media_urls(screen_name, count=200, trim_user=True, exclude_replies=True): 
 
-for i in range(len(images)):
-	urllib.request.urlretrieve(images[i], "tmp_{}.jpg".format(str(i).zfill(4)))
+	with open("keys.dat") as f:
+		keys = f.read().split()
+	try:
+		api = twitter.Api(consumer_key= keys[0],
+					consumer_secret=keys[1],
+					access_token_key=keys[2],
+					access_token_secret=keys[3])
+	except:
+		raise Exception("Invalid twitter credentials")
 
-for i in range(len(images)):
+	try:
+		res = api.GetUserTimeline(screen_name=screen_name, count=count, trim_user=trim_user, exclude_replies=exclude_replies)
+	except Exception as e:
+		raise e
+	images = []
+	for tweet in res:
+		js = tweet._json["entities"]
+		if "media" in js.keys():
+			for media in js["media"]:
+				if media["media_url"][-3:] == "jpg":
+					images.append(media["media_url"])
+	if len(images) == 0:
+		raise Exception("No valid media found for screen_name: " + screen_name)
+	return images
 
-	subprocess.call(('''ffmpeg -loop 1 -i tmp_{}.jpg -c:a libfdk_aac -ar 44100 -ac 2 -vf "scale='if(gt(a,16/9),1280,-1)':'if(gt(a,16/9),-1,720)',                                  pad=1280:720:(ow-iw)/2:(oh-ih)/2" -c:v libx264 -b:v 10M -pix_fmt yuv420p -r 30 -shortest -avoid_negative_ts make_zero -fflags +genpts -t 1 tmp_{}.mp4''').format(str(i).zfill(4) , str(i).zfill(4)),
-		cwd=os.path.dirname(os.path.realpath(__file__)), shell=True, env=dict(os.environ, PATH="C:/Users/johnidel/Downloads/ffmpeg-20180201-b1af0e2-win64-static/ffmpeg-20180201-b1af0e2-win64-static/bin"))
+def urls_to_movie(images, output="output.mp4"):
 
-with open("tmp_files.txt", "w") as f:
+	count = 0
+	while os.path.isfile(output):
+		output = output.split(".")[0] + "(" + str(count) + ")." + output.split(".")[1]
+		count += 1
+
 	for i in range(len(images)):
-		f.write("file 'tmp_{}.mp4'\n".format(str(i).zfill(4)))
+		try:
+			urllib.request.urlretrieve(images[i], "tmp_{}.jpg".format(str(i).zfill(4)))
+		except Exception as e:
+			raise Exception("Unable to retrieve image." + str(e))
 
+	for i in range(len(images)):
+		try:
+			subprocess.call(('''ffmpeg -loop 1 -i tmp_{}.jpg -c:a libfdk_aac -ar 44100 -ac 2 -vf "scale='if(gt(a,16/9),1280,-1)':'if(gt(a,16/9),-1,720)',                                  pad=1280:720:(ow-iw)/2:(oh-ih)/2" -c:v libx264 -b:v 10M -pix_fmt yuv420p -r 30 -shortest -avoid_negative_ts make_zero -fflags +genpts -t 1 tmp_{}.mp4''').format(str(i).zfill(4) , str(i).zfill(4)),
+				cwd=os.path.dirname(os.path.realpath(__file__)), shell=True, env=dict(os.environ, PATH="C:/Users/johnidel/Downloads/ffmpeg-20180201-b1af0e2-win64-static/ffmpeg-20180201-b1af0e2-win64-static/bin"))
+		except Exception as e:
+			raise e
 
-subprocess.call("ffmpeg -f concat -i tmp_files.txt output.mp4",
-	cwd=os.path.dirname(os.path.realpath(__file__)),
-	shell=True,
-	env=dict(os.environ, PATH="C:/Users/johnidel/Downloads/ffmpeg-20180201-b1af0e2-win64-static/ffmpeg-20180201-b1af0e2-win64-static/bin"))
-		
+	with open("tmp_files.txt", "w") as f:
+		for i in range(len(images)):
+			f.write("file 'tmp_{}.mp4'\n".format(str(i).zfill(4)))
 
-for i in range(len(images)):
-	os.remove("tmp_{}.jpg".format(str(i).zfill(4)))
-	os.remove("tmp_{}.mp4".format(str(i).zfill(4)))
+	try:
+		subprocess.call("ffmpeg -f concat -i tmp_files.txt " + output,
+			cwd=os.path.dirname(os.path.realpath(__file__)),
+			shell=True,
+			env=dict(os.environ, PATH="C:/Users/johnidel/Downloads/ffmpeg-20180201-b1af0e2-win64-static/ffmpeg-20180201-b1af0e2-win64-static/bin"))
+	except Exception as e:
+		raise e
+			
+	#cleanup temp files
+	for i in range(len(images)):
+		os.remove("tmp_{}.jpg".format(str(i).zfill(4)))
+		os.remove("tmp_{}.mp4".format(str(i).zfill(4)))
+	os.remove("tmp_files.txt".format(str(i).zfill(4)))
+
+	return output
+
+def video_analysis(filename):
+	credentials = service_account.Credentials.from_service_account_file(
+	    'googe.dat')
+	try:
+		client = videointelligence.VideoIntelligenceServiceClient(
+			credentials=credentials
+		)
+	except Exception as e:
+		raise e
+
+	try:
+		with open(filename, "rb") as f:
+			video_data = f.read()
+	except Exception as e:
+		raise e
+
+	try:
+		result = client.annotate_video(
+			input_content=video_data,
+			features=['LABEL_DETECTION'],
+		).result()
+	except Exception as e:
+		raise e
+
+	return result
+
+def get_twitter_media_analysis(screen_name, count=200, trim_user=True, exclude_replies=True, output_name="output.mp4", delete_movie=False):
+	images = get_timeline_media_urls(screen_name, count, trim_user, exclude_replies)
+	output_filename_actual = urls_to_movie(images, output=output_name)
+	result = video_analysis(output_filename_actual)
+	if delete_movie:
+		os.remove(output_name)
+
+	analysis_json = json.loads(MessageToJson(result)) 
+
+	segments = dict()
+	#only one video submitted
+	for shot_label in analysis_json["annotationResults"][0]["shotLabelAnnotations"]:
+		entity = [shot_label["entity"]["description"]]
+		if "categoryEntities" in shot_label.keys():
+			for category_entity in shot_label["categoryEntities"]:
+				entity.append(category_entity["description"])
+			entity = entity[::-1]
+
+		entity = ">".join(entity)
+
+		for segment in shot_label["segments"]:
+			seg = segment["segment"]
+			time = (float(seg["startTimeOffset"][:-1]), float(seg["endTimeOffset"][:-1]))
+			if time not in segments.keys():
+				segments[time] = dict(start=time[0], end=time[1], labels=[(entity, segment["confidence"])])
+			else:
+				segments[time]["labels"].append((entity, segment["confidence"]))
+
+	results = []
+	for key in segments.keys():
+		results.append(segments[key])
+	results = sorted(results, key= lambda x: x["start"])
+	print(json.dumps(results))
+	return results
+
+if __name__ == "__main__":
+	get_twitter_media_analysis("dannygarcia95", count=10)
