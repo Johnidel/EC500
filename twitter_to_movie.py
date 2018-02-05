@@ -8,8 +8,20 @@ from google.oauth2 import service_account
 from google.protobuf.json_format import MessageToJson
 
 
-def get_timeline_media_urls(screen_name, count=200, trim_user=True, exclude_replies=True): 
+def get_timeline_media_urls(screen_name, count=200, exclude_replies=True): 
+	"""Get list of jpg urls found in media associated with tweets from a specific twitter accounts timeline
 
+    Args:
+        screen_name (str): Twitter screen name associated with desired timeline
+
+    Keyword Arguments (optional):
+        count (int): Number of tweets to look through (capped at 200 per api limits). Default 200.
+        exclude_replies (bool): Exclude media found in tweets where specified user only replied. Default: True
+
+    Returns:
+        list: All .jpg image urls found in the twitter feed, as strings. 
+
+    """
 	with open("keys.dat") as f:
 		keys = f.read().split()
 	try:
@@ -21,7 +33,7 @@ def get_timeline_media_urls(screen_name, count=200, trim_user=True, exclude_repl
 		raise Exception("Invalid twitter credentials")
 
 	try:
-		res = api.GetUserTimeline(screen_name=screen_name, count=count, trim_user=trim_user, exclude_replies=exclude_replies)
+		res = api.GetUserTimeline(screen_name=screen_name, count=count, trim_user=True, exclude_replies=exclude_replies)
 	except Exception as e:
 		raise e
 	images = []
@@ -36,7 +48,18 @@ def get_timeline_media_urls(screen_name, count=200, trim_user=True, exclude_repl
 	return images
 
 def urls_to_movie(images, output="output.mp4"):
+	"""Generate local mp4 file from a list of urls, with 1 sec per images
 
+    Args:
+        images (list): List of images to include in movie, as strings
+
+	Keyword Arguments (optional):
+        output: Ouput filename for video. Default: output.mp4
+
+    Returns:
+        str: Output filename used by ffmpeg, in event provided filename was in use
+
+    """
 	count = 0
 	while os.path.isfile(output):
 		output = output.split(".")[0] + "(" + str(count) + ")." + output.split(".")[1]
@@ -63,7 +86,7 @@ def urls_to_movie(images, output="output.mp4"):
 		subprocess.call("ffmpeg -f concat -i tmp_files.txt " + output,
 			cwd=os.path.dirname(os.path.realpath(__file__)),
 			shell=True,
-			env=dict(os.environ, PATH="C:/Users/johnidel/Downloads/ffmpeg-20180201-b1af0e2-win64-static/ffmpeg-20180201-b1af0e2-win64-static/bin"))
+			env=dict(os.environ))
 	except Exception as e:
 		raise e
 			
@@ -76,6 +99,19 @@ def urls_to_movie(images, output="output.mp4"):
 	return output
 
 def video_analysis(filename):
+	"""Generate list of labels for a specified mp4 file, using Google cloud ideo intelligence
+
+	Ouput is of form: 
+		[{start: 0, end: 1, labels: [("cat", .56), ("animal>dog", .2)]}]
+		Each labels is broken up by (category > categy > ... > entity , confidence level)
+
+    Args:
+        filename (str): Filename of input .mp4 file
+
+    Returns:
+        list: list of segments and labels, sorted by start time of each shot
+
+    """
 	credentials = service_account.Credentials.from_service_account_file(
 	    'googe.dat')
 	try:
@@ -101,8 +137,27 @@ def video_analysis(filename):
 
 	return result
 
-def get_twitter_media_analysis(screen_name, count=200, trim_user=True, exclude_replies=True, output_name="output.mp4", delete_movie=False):
-	images = get_timeline_media_urls(screen_name, count, trim_user, exclude_replies)
+def get_twitter_media_analysis(screen_name, count=200, exclude_replies=True, output_name="output.mp4", delete_movie=True):
+	"""Generate list of labels from the video anaylsis of a specified users twitter timeline
+
+	Ouput is of form: 
+		[{start: 0, end: 1, labels: [("cat", .56), ("animal>dog", .2)]}]
+		Each labels is broken up by (category > categy > ... > entity , confidence level)
+
+    Args:
+       screen_name (str): Twitter screenname associated with desired timeline
+
+    Keyword Arguments (optional):
+       count (int): Number of tweets to look through (capped at 200 per api limits). Default: 200
+       exclude_replies (bool): Exclude media found in tweets where specified user only replied. Default: True
+       output_name (str): Filename of input .mp4 file. Default: output.mp4
+	   delete_movie (bool): Specified whether or not to remove local file after analysis. Default: True
+
+    Returns:
+        list: list of segments and labels, sorted by start time of each shot
+
+    """
+	images = get_timeline_media_urls(screen_name, count, exclude_replies)
 	output_filename_actual = urls_to_movie(images, output=output_name)
 	result = video_analysis(output_filename_actual)
 	if delete_movie:
