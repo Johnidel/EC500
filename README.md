@@ -8,6 +8,14 @@ Required libraries:
 * python-twitter: https://github.com/bear/python-twitter
 * Google Cloud Video Intelligence: https://cloud.google.com/video-intelligence/docs/reference/libraries#client-libraries-install-python
 
+### API Keys
+
+Two API Keys are required, one for Twitter and one for Google Video Intelligence.
+
+Twitter keys should be put in a file named keys.dat in the local directory, with all 4 keys spearated by new lines.
+
+For Video Intelligence, the service account file created via the Google Cloud Console should be placed in a file named googe.dat in the working directory. 
+
 ### Usage 
 The overall functionality is exposed via:
 > get_twitter_media_analysis(screen_name, count=200, exclude_replies=True, output_name='output.mp4', delete_movie=True)
