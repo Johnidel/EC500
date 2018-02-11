@@ -1,6 +1,6 @@
 # EC500
 
-###Dependencies
+### Dependencies
 
 All of the package dependecies are available via pip. This module is built in Python 3.
 
@@ -8,14 +8,14 @@ Required libraries:
 * python-twitter: https://github.com/bear/python-twitter
 * Google Cloud Video Intelligence: https://cloud.google.com/video-intelligence/docs/reference/libraries#client-libraries-install-python
 
-###Usage 
+### Usage 
 The overall functionality is exposed via:
 > get_twitter_media_analysis(screen_name, count=200, exclude_replies=True, output_name='output.mp4', delete_movie=True)
 
 The individual functions are broken out into their own API's. 
 All errors are pass through, meaning that all of these calls should be surrounded in a try-catch architecture. 
 
-###Help Module Contents
+### Help Module Contents
 NAME
     twitter_to_movie
 
