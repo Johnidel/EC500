@@ -4,9 +4,12 @@
 
 All of the package dependecies are available via pip. This module is built in Python 3.
 
-Required libraries:
+Required python libraries:
 * python-twitter: https://github.com/bear/python-twitter
 * Google Cloud Video Intelligence: https://cloud.google.com/video-intelligence/docs/reference/libraries#client-libraries-install-python
+
+Extenal dependencies:
+* ffmpeg: Location of ffmpeg executable must exist in user PATH environment variable.
 
 ### API Keys
 
@@ -84,3 +87,6 @@ FUNCTIONS
         
         Returns:
             list: list of segments and labels, sorted by start time of each shot
+### Author
+
+John Delaney
