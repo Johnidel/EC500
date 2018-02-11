@@ -7,6 +7,11 @@ from google.cloud import videointelligence
 from google.oauth2 import service_account
 from google.protobuf.json_format import MessageToJson
 
+class InvalidMediaException(Exception):
+    pass
+
+class InvalidCredentialsException(Exception):
+	pass
 
 def get_timeline_media_urls(screen_name, count=200, exclude_replies=True): 
 	"""Get list of jpg urls found in media associated with tweets from a specific twitter accounts timeline
@@ -30,7 +35,7 @@ def get_timeline_media_urls(screen_name, count=200, exclude_replies=True):
 					access_token_key=keys[2],
 					access_token_secret=keys[3])
 	except:
-		raise Exception("Invalid twitter credentials")
+		raise InvalidCredentialsException("Invalid twitter credentials")
 
 	try:
 		res = api.GetUserTimeline(screen_name=screen_name, count=count, trim_user=True, exclude_replies=exclude_replies)
@@ -44,7 +49,7 @@ def get_timeline_media_urls(screen_name, count=200, exclude_replies=True):
 				if media["media_url"][-3:] == "jpg":
 					images.append(media["media_url"])
 	if len(images) == 0:
-		raise Exception("No valid media found for screen_name: " + screen_name)
+		raise InvalidMediaException("No valid media found for screen_name: " + screen_name)
 	return images
 
 def urls_to_movie(images, output="output.mp4"):
@@ -69,7 +74,7 @@ def urls_to_movie(images, output="output.mp4"):
 		try:
 			urllib.request.urlretrieve(images[i], "tmp_{}.jpg".format(str(i).zfill(4)))
 		except Exception as e:
-			raise Exception("Unable to retrieve image." + str(e))
+			raise e
 
 	for i in range(len(images)):
 		try:
@@ -188,7 +193,7 @@ def get_twitter_media_analysis(screen_name, count=200, exclude_replies=True, out
 	for key in segments.keys():
 		results.append(segments[key])
 	results = sorted(results, key= lambda x: x["start"])
-	print(json.dumps(results))
+	
 	return results
 
 if __name__ == "__main__":
