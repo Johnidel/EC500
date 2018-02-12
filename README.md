@@ -26,6 +26,11 @@ The overall functionality is exposed via:
 The individual functions are broken out into their own API's. 
 All errors are pass through, meaning that all of these calls should be surrounded in a try-catch architecture. 
 
+### Example
+
+> import twitter_to_movie
+> print(twitter_to_movie.get_twitter_media_analysis("dannygarcia95", count=10))
+
 ### Help Module Contents
 NAME
     twitter_to_movie
