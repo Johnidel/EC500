@@ -36,6 +36,8 @@ print(twitter_to_movie.get_twitter_media_analysis("dannygarcia95", count=10))
 ~~~~
 
 ### Help Module Contents
+
+~~~~
 NAME
     twitter_to_movie
 
@@ -96,6 +98,8 @@ FUNCTIONS
         
         Returns:
             list: list of segments and labels, sorted by start time of each shot
+~~~~
+
 ### Author
 
 John Delaney
