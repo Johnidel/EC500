@@ -28,8 +28,8 @@ All errors are pass through, meaning that all of these calls should be surrounde
 
 ### Example
 
-> import twitter_to_movie
-> print(twitter_to_movie.get_twitter_media_analysis("dannygarcia95", count=10))
+`import twitter_to_movie
+print(twitter_to_movie.get_twitter_media_analysis("dannygarcia95", count=10))`
 
 ### Help Module Contents
 NAME
