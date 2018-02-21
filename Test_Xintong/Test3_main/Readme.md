@@ -21,3 +21,14 @@ by
 - [x] Error handle
 
   <img src="https://github.com/Johnidel/EC500/blob/CodeReview/Test_Xintong/Test3_main/WX20180221-155351.png" />
+
+### Strength
+- Unique structure and elegant codes
+- High efficiency by usingn multiple tools
+- Detailed explanations and notations (Really appreciate for that)
+
+
+### Suggestion
+- [ ] ffmpeg issue
+- [ ] Split the labels in different lines to make them more readable
+- [ ] Try to write the labels into videos
