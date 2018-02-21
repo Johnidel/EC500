@@ -6,3 +6,6 @@ Test function get_timeline_media_urls
 - [x] Get tweets timeline
 - [x] Get image url
 - [x] Error handle: 1. Invalid twitter user 2.User with no valid media
+
+  <img src="https://github.com/Johnidel/EC500/blob/CodeReview/Test_Xintong/Test1_get_img_url/WX20180221-151937.png" />
+
