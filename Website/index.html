@@ -4,6 +4,8 @@
     <title>Reindeer Lights</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/jquery.canvasjs.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 	<script src="https://unpkg.com/angular-media-events@0.5.0/dist/media-events.js"></script>
 
@@ -47,6 +49,19 @@
 		 				</div>
  					</div>
 				</div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-sm-12">
+							<button class="btn btn-primary" ng-click="get_histo()">Get Histogram</button>
+							<div id="chart" style="height: 360px; width: 100%;"></div>
+							<div ng-repeat="arr in data.arr track by $index" ng-if="$index < 6">
+		 						{{arr[0]}} : {{arr[1]}}
+		 					</div>
+
+		 				</div>
+
+ 					</div>
+				</div>
 			</div>
 		</div>	
 			
@@ -67,6 +82,44 @@
 
 		$scope.internal = function(X) {
 			console.log(X)
+		}
+
+		$scope.get_histo = function() {
+			//$scope.data.movie = "output.mp4"
+			console.log("runs")
+			//$scope.$apply()
+			$.ajax({
+				type: "GET",
+				url: "/api/histo",
+				data: {},
+				dataType: 'json',
+				jsonpCallback: "callback",
+				success: function(result) {
+					if( "error" in result) {
+						alert(result["error"])
+					} else {
+						$scope.data.histo = result.histo
+						$scope.data.arr = result.arr
+
+						var chart = new CanvasJS.Chart("chart",
+						{        
+							data: [
+							{
+								type: "column",
+								dataPoints: result.ss
+							}					
+							]
+						});
+
+						chart.render();
+
+						$scope.$apply();
+					}
+				},
+				failure: function(err) {
+					console.log("Failed");
+				}
+			})
 		}
 
 		$scope.get_labels = function(screenname) {
