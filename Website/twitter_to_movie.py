@@ -194,7 +194,7 @@ def get_twitter_media_analysis(screen_name, count=200, exclude_replies=True, out
 		results.append(segments[key])
 	results = sorted(results, key= lambda x: x["start"])
 	
-	return results
+	return results, images
 
 if __name__ == "__main__":
 	get_twitter_media_analysis("dannygarcia95", count=100, delete_movie=False)
