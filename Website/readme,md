@@ -1,0 +1,1 @@
+To use this, you must have a mongo client/server running with an empty database folder. Whenever a request is made, the images used, along with the analysis, twitter handle, and timestamp get put into a new mongo document. I then select all of analysis words by largest count and make a histogram to see the most common or trending words, this is displayed on the website.
